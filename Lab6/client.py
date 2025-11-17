@@ -1,78 +1,73 @@
-import socket
-import json
+import xmlrpc.client
 
-# --- Helper function to make RPC calls ---
-def rpc_call(proc_name, args):
-    """
-    Calls a remote procedure on the server.
-    
-    Args:
-        proc_name (str): The name of the function to call.
-        args (list): A list of arguments for the function.
-    """
-    SERVER_HOST = '192.168.137.1'  # Change this to the Server's IP address
-    SERVER_PORT = 65432
-    
-    # 1. Package the request
-    request = {
-        'procedure': proc_name,
-        'args': args
-    }
-    
-    response = "No response from server"
-    
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            # 2. Connect and send the request
-            s.connect((SERVER_HOST, SERVER_PORT))
-            s.sendall(json.dumps(request).encode('utf-8'))
-            
-            # 3. Receive and deserialize the response
-            data = s.recv(1024)
-            response = json.loads(data.decode('utf-8'))
-            
-    except ConnectionRefusedError:
-        return f"[CLIENT] Error: Connection refused. Is the server running at {SERVER_HOST}?"
-    except Exception as e:
-        return f"[CLIENT] Error: {e}"
-        
-    return response
+proxy = xmlrpc.client.ServerProxy("http://localhost:8000/")
 
-# --- Main execution to call all procedures ---
-if __name__ == "__main__":
-    print("--- 1. Palindrome Check ---")
-    print(f"Calling 'is_palindrome' with ['racecar'] -> {rpc_call('is_palindrome', ['racecar'])}")
-    print(f"Calling 'is_palindrome' with ['hello'] -> {rpc_call('is_palindrome', ['hello'])}")
+print("Client: Connected to RPC Server.\n")
 
-    print("\n--- 2. Leap Year Check ---")
-    print(f"Calling 'is_leap' with [2024] -> {rpc_call('is_leap', [2024])}")
-    print(f"Calling 'is_leap' with [2023] -> {rpc_call('is_leap', [2023])}")
+print("--- 1. Palindrome ---")
+s = "madam"
+print(f"Client: Calling palindrome('{s}')")
+result = proxy.palindrome(s)
+print(f"Server returned: {result}\n")
 
-    print("\n--- 3. Find GCD ---")
-    print(f"Calling 'find_gcd' with [48, 18] -> {rpc_call('find_gcd', [48, 18])}")
+print("--- 2. Leap Year ---")
+year = 2024
+print(f"Client: Calling leap_year({year})")
+result = proxy.leap_year(year)
+print(f"Server returned: {result}\n")
 
-    print("\n--- 4. Find Square Root ---")
-    print(f"Calling 'find_sqrt' with [64] -> {rpc_call('find_sqrt', [64])}")
-    print(f"Calling 'find_sqrt' with [-10] -> {rpc_call('find_sqrt', [-10])}")
+print("--- 3. GCD ---")
+a, b = 48, 18
+print(f"Client: Calling gcd({a}, {b})")
+result = proxy.gcd(a, b)
+print(f"Server returned: {result}\n")
 
-    print("\n--- 5. Swap two variables ---")
-    print(f"Calling 'swap_vars' with [10, 20] -> {rpc_call('swap_vars', [10, 20])}")
+print("--- 4. Square Root ---")
+n = 64
+print(f"Client: Calling sqrt({n})")
+result = proxy.sqrt(n)
+print(f"Server returned: {result}")
 
-    print("\n--- 6. Array Stats (Max, Min, Avg) ---")
-    my_array = [10, 5, 40, 25, 15]
-    print(f"Calling 'array_stats' with [{my_array}] -> {rpc_call('array_stats', [my_array])}")
+n_neg = -10
+print(f"Client: Calling sqrt({n_neg})")
+try:
+    result = proxy.sqrt(n_neg)
+    print(f"Server returned: {result}\n")
+except xmlrpc.client.Fault as err:
+    print(f"Server returned an error: {err.faultString}\n")
 
-    print("\n--- 7. Compare two strings ---")
-    print(f"Calling 'compare_strings' with ['apple', 'banana'] -> {rpc_call('compare_strings', ['apple', 'banana'])}")
-    print(f"Calling 'compare_strings' with ['test', 'test'] -> {rpc_call('compare_strings', ['test', 'test'])}")
+print("--- 5. Swap ---")
+x, y = 10, 20
+print(f"Client: Calling swap({x}, {y})")
+swapped_x, swapped_y = proxy.swap(x, y)
+print(f"Server returned: a = {swapped_x}, b = {swapped_y}\n")
 
-    print("\n--- 8. Substring Check ---")
-    print(f"Calling 'is_substring' with ['hello world', 'world'] -> {rpc_call('is_substring', ['hello world', 'world'])}")
-    print(f"Calling 'is_substring' with ['hello world', 'python'] -> {rpc_call('is_substring', ['hello world', 'python'])}")
+print("--- 6. Array Stats ---")
+my_array = [10, 20, 30, 40, 50]
+print(f"Client: Calling array_stats({my_array})")
+stats = proxy.array_stats(my_array)
+print(f"Server returned: Min: {stats['min']}, Max: {stats['max']}, Avg: {stats['average']}\n")
 
-    print("\n--- 9. Concatenate two strings ---")
-    print(f"Calling 'concat_strings' with ['Hello, ', 'RPC!'] -> {rpc_call('concat_strings', ['Hello, ', 'RPC!'])}")
+print("--- 7. Compare Strings ---")
+s1, s2 = "apple", "banana"
+print(f"Client: Calling compare_str('{s1}', '{s2}')")
+result = proxy.compare_str(s1, s2)
+print(f"Server returned: {result}\n")
 
-    print("\n--- 10. Reverse an array ---")
-    array_to_reverse = [1, 2, 3, 4, 5]
-    print(f"Calling 'reverse_array' with [{array_to_reverse}] -> {rpc_call('reverse_array', [array_to_reverse])}")
+print("--- 8. Substring ---")
+sub, main_str = "world", "hello world"
+print(f"Client: Calling substring('{sub}', '{main_str}')")
+result = proxy.substring(sub, main_str)
+print(f"Server returned: {result}\n")
+
+print("--- 9. Concatenate ---")
+s1, s2 = "hello", " world"
+print(f"Client: Calling concat('{s1}', '{s2}')")
+result = proxy.concat(s1, s2)
+print(f"Server returned: '{result}'\n")
+
+print("--- 10. Reverse List ---")
+my_list = [1, 2, 3, 4, 5]
+print(f"Client: Calling reverse({my_list})")
+result = proxy.reverse(my_list)
+print(f"Server returned: {result}\n")
