@@ -1,0 +1,5 @@
+Hello, this is the first line of the file.
+RMI stands for Remote Method Invocation.
+This server demonstrates reading a file line by line.
+
+This is the last line.
